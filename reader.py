@@ -37,7 +37,7 @@ class Chunk:
         self.nbt = nbt
         self.heightMap = np.zeros((16, 16), dtype=int)
         self.sections: List[Section] = []
-        self.offset = -nbt["posY"].value
+        self.offset = -nbt["sections"][0]["Y"].value
         self.lowestY = self.offset * 16
 
     def readHeightMap(self):
