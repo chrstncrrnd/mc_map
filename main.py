@@ -42,7 +42,7 @@ def processRegion(x, z, regionsFilePath):
             chunk.processChunk()
             for blockx in range(16):
                 for blockz in range(16):
-                    block = chunk.getTopBlockAt(blockx, blockz)
+                    block = str(chunk.getTopBlockAt(blockx, blockz))
                     id = block[10:]
                     color = colorsHash.get(id)
                     if color is None:
@@ -57,7 +57,7 @@ def getAllRegions(regionsFilePath):
     return listdir(regionsFilePath)
 
 
-def stichImages(images):
+def stichImages(images: list):
     print("Stiching images")
     xs = []
     zs = []

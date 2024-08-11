@@ -1,4 +1,5 @@
 import math
+from typing import List
 from nbt import nbt
 import io
 import zlib
@@ -6,7 +7,7 @@ import numpy as np
 
 
 class Section:
-    def __init__(self, nbt):
+    def __init__(self, nbt: nbt.TAG_Compound):
         self.nbt = nbt
         self.palette = list(nbt["block_states"]["palette"])
         if len(self.palette) == 1:
@@ -16,7 +17,7 @@ class Section:
         self.indiciesPerLong = 64 // self.indexLength
         self.y = int(nbt["Y"].value)
 
-    def getBlockAt(self, x, y, z):
+    def getBlockAt(self, x: int, y: int, z: int) -> str:
         if len(self.palette) == 1:
             return self.palette[0]
         y = y - self.y * 16
@@ -32,10 +33,10 @@ class Section:
 
 
 class Chunk:
-    def __init__(self, nbtFile):
-        self.nbtFile = nbtFile
+    def __init__(self, nbt: nbt.TAG_Compound):
+        self.nbtFile = nbt
         self.heightMap = np.zeros((16, 16), dtype=int)
-        self.sections = []
+        self.sections: List[Section] = []
 
     def readHeightMap(self):
         heightMaps = self.nbtFile["Heightmaps"]["WORLD_SURFACE"]
@@ -61,10 +62,10 @@ class Chunk:
         for section in sectionsToProcess:
             self.sections.append(Section(section))
 
-    def getTopBlockAt(self, x, z):
+    def getTopBlockAt(self, x, z) -> str:
         y = self.heightMap[x][z]
         sectionY = y // 16
-        section = self.sections[sectionY - self.lowestSection + 5]
+        section: Section = self.sections[sectionY - self.lowestSection + 5]
         return section.getBlockAt(x, y, z)
 
 
