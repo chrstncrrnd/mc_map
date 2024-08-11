@@ -1,8 +1,12 @@
 import numpy as np
 from PIL import Image
 import reader as r
-from os import listdir
+import os
 from sys import argv
+import multiprocessing as mp
+
+OUTPUT_FOLDER = "./world_map"
+regionsFilePath = ""
 
 
 def parseColor(color: str) -> list:
@@ -50,11 +54,11 @@ def processRegion(x, z, regionsFilePath):
                     matrix[chunkz * 16 + blockz][chunkx * 16 + blockx] = color
 
     img = Image.fromarray(matrix, "RGB")
-    img.save(f"region.{x}.{z}.png")
+    img.save(f"./{OUTPUT_FOLDER}/region.{x}.{z}.png")
 
 
 def getAllRegions(regionsFilePath):
-    return listdir(regionsFilePath)
+    return list(filter(lambda x: x.endswith(".mca"), os.listdir(regionsFilePath)))
 
 
 def stichImages(images: list):
@@ -78,17 +82,14 @@ def stichImages(images: list):
         x, z = image.split(".")[1:-1]
         x = int(x)
         z = int(z)
-        img = Image.open(image)
+        img = Image.open(f"./{OUTPUT_FOLDER}/" + image)
+
         im.paste(img, ((x - minX) * 512, (z - minZ) * 512))
-    im.save("world.png")
+    im.save(f"./{OUTPUT_FOLDER}/world.png")
     print("Done stiching images")
 
 
-if __name__ == "__main__":
-    regionsFilePath = argv[1] if len(argv) > 1 else ""
-    if regionsFilePath == "":
-        print("ERROR: Please provide a path to the regions folder")
-        exit(1)
+def main():
     regions = getAllRegions(regionsFilePath)
     regionOuts = []
     for region in regions:
@@ -98,3 +99,40 @@ if __name__ == "__main__":
         regionOuts.append(f"region.{x}.{z}.png")
         print("Done region")
     stichImages(regionOuts)
+
+
+def processRegionMultithreaded(region):
+    x, z = region.split(".")[1:-1]
+    print(f"Starting region {x} {z}")
+    processRegion(int(x), int(z), regionsFilePath)
+    print("Done region")
+    return f"region.{x}.{z}.png"
+
+
+def mainMultithreaded():
+    regions = getAllRegions(regionsFilePath)
+
+    pool = mp.Pool()
+    pool = mp.Pool(processes=mp.cpu_count())
+    regionOuts = pool.map(processRegionMultithreaded, regions)
+
+    stichImages(regionOuts)
+
+
+if __name__ == "__main__":
+    regionsFilePath = argv[1] if len(argv) > 1 else ""
+    if regionsFilePath == "":
+        print("ERROR: Please provide a path to the regions folder")
+        exit(1)
+
+    mode = argv[2] if len(argv) > 2 else "single"
+
+    if not os.path.exists(OUTPUT_FOLDER):
+        os.mkdir(OUTPUT_FOLDER)
+
+    if mode == "multi":
+        print("Starting multithreaded")
+        mainMultithreaded()
+    else:
+        print("Starting singlethreaded")
+        main()
