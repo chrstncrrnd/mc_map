@@ -37,7 +37,8 @@ class Chunk:
         self.nbt = nbt
         self.heightMap = np.zeros((16, 16), dtype=int)
         self.sections: List[Section] = []
-        self.offset = -nbt["sections"][0]["Y"].value
+        self.offset = -nbt["posY"].value
+        self.lowestY = self.offset * 16
 
     def readHeightMap(self):
         heightMaps = self.nbt["Heightmaps"]["WORLD_SURFACE"]
@@ -51,7 +52,9 @@ class Chunk:
                     currentZ += 1
                 if currentZ > 15:
                     break
-                self.heightMap[currentX][currentZ] = ((h >> 9 * i) & 0x1FF) - 65
+                self.heightMap[currentX][currentZ] = (
+                    ((h >> 9 * i) & 0x1FF) - self.lowestY - 1
+                )
                 currentX += 1
 
     def processChunk(self):
