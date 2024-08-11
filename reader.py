@@ -110,6 +110,9 @@ class Region:
         chunkData = self.file.read(size)
         decompressedData = zlib.decompress(chunkData[5:])
         nbtFile = nbt.NBTFile(buffer=io.BytesIO(decompressedData))
-        if str(nbtFile["Status"]) != "minecraft:full":
+        if (
+            str(nbtFile["Status"]) != "minecraft:full"
+            and str(nbtFile["Status"]) != "full"
+        ):
             raise Exception("Chunk not fully generated")
         return Chunk(nbtFile)
