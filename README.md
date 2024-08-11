@@ -3,4 +3,4 @@ Renders the map of a minecraft world using a custom minecraft anvil format reade
 
 Usage: `python3 main.py <path-to-regions-folder>`
 
-
+NOTE: `colors.txt` may be incomplete
