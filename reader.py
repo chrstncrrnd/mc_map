@@ -19,7 +19,7 @@ class Section:
 
     def getBlockAt(self, x: int, y: int, z: int) -> str:
         if len(self.palette) == 1:
-            return self.palette[0]
+            return self.palette[0]["Name"]
         y = y - self.y * 16
         if self.data == []:
             return self.palette[0]
@@ -34,12 +34,13 @@ class Section:
 
 class Chunk:
     def __init__(self, nbt: nbt.TAG_Compound):
-        self.nbtFile = nbt
+        self.nbt = nbt
         self.heightMap = np.zeros((16, 16), dtype=int)
         self.sections: List[Section] = []
+        self.offset = -nbt["sections"][0]["Y"].value
 
     def readHeightMap(self):
-        heightMaps = self.nbtFile["Heightmaps"]["WORLD_SURFACE"]
+        heightMaps = self.nbt["Heightmaps"]["WORLD_SURFACE"]
         self.heightMap = np.zeros((16, 16), dtype=int)
         currentX = 0
         currentZ = 0
@@ -54,18 +55,18 @@ class Chunk:
                 currentX += 1
 
     def processChunk(self):
-        minY = math.floor(self.heightMap.min() / 16) + 5
-        maxY = math.floor(self.heightMap.max() / 16) + 5
+        minY = math.floor(self.heightMap.min() / 16) + self.offset
+        maxY = math.floor(self.heightMap.max() / 16) + self.offset
         self.lowestSection = minY
         # we can add some pruning here to remove sections that are not needed
-        sectionsToProcess = list(self.nbtFile["sections"])[minY : maxY + 1]
+        sectionsToProcess = list(self.nbt["sections"])[minY : maxY + 1]
         for section in sectionsToProcess:
             self.sections.append(Section(section))
 
     def getTopBlockAt(self, x, z) -> str:
         y = self.heightMap[x][z]
         sectionY = y // 16
-        section: Section = self.sections[sectionY - self.lowestSection + 5]
+        section: Section = self.sections[sectionY - self.lowestSection + self.offset]
         return section.getBlockAt(x, y, z)
 
 
